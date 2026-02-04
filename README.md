@@ -45,10 +45,6 @@
 - **Data Source**: OpenStreetMap via Overpass API
 - **Geolocation**: HTML Geolocation API
 
-## 🚀 Demo Live
-
-Aplikasi dapat diakses di: [https://yourusername.github.io/GeoWithin](https://yourusername.github.io/GeoWithin)
-
 ## 📁 Struktur Project
 
 ```
