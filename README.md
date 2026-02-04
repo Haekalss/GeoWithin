@@ -1,6 +1,8 @@
 # 🗺️ GeoWithin - Nearby Place Finder
 
-![GeoWithin Logo](image/logoGeo.png)
+<p align="center">
+  <img src="image/logoGeo.png" alt="GeoWithin Logo" width="150" height="150">
+</p>
 
 **GeoWithin** adalah aplikasi web pencari tempat terdekat berbasis lokasi yang menggunakan teknologi Sistem Informasi Geografis (SIG). Aplikasi ini membantu pengguna menemukan berbagai fasilitas di sekitar lokasi mereka dengan mudah dan cepat.
 
