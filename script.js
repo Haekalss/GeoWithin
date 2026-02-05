@@ -9,6 +9,8 @@ let areaPolygon;
 let areaLayer;
 let markers = [];
 let activeFetchController;
+let activeRouting = null; // Track active routing instance
+let routingControl = null; // Track active routing control
 
 const searchInput = document.getElementById("search");
 const radiusSelect = document.getElementById("radius");
@@ -89,6 +91,44 @@ function buildDirectionsUrl(lat, lon) {
   const origin = `${userLocation[0]},${userLocation[1]}`;
   const destination = `${lat},${lon}`;
   return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+}
+
+function clearRouting() {
+  if (routingControl) {
+    map.removeControl(routingControl);
+    routingControl = null;
+    activeRouting = null;
+  }
+}
+
+function showRoute(destLat, destLon, destName) {
+  clearRouting();
+  
+  routingControl = L.Routing.control({
+    waypoints: [
+      L.latLng(userLocation[0], userLocation[1]),
+      L.latLng(destLat, destLon)
+    ],
+    routeWhileDragging: false,
+    addWaypoints: false,
+    draggableWaypoints: false,
+    show: false, // Hide the default panel
+    createMarker: function() {
+      return null; // Don't create waypoint markers
+    },
+    lineOptions: {
+      styles: [{color: '#4285f4', opacity: 0.8, weight: 5}],
+      extendToWaypoints: true,
+      missingRouteTolerance: 2
+    }
+  }).addTo(map);
+
+  activeRouting = {lat: destLat, lon: destLon, name: destName};
+  toast(`Rute ke ${destName} ditampilkan`);
+}
+
+function buildRouteButton(destLat, destLon, destName) {
+  return `<button class="route-btn" data-lat="${destLat}" data-lon="${destLon}" data-name="${destName}" onclick="window.showRouteHandler && window.showRouteHandler(${destLat}, ${destLon}, '${destName.replace(/'/g, "\\'")}')">🚗 Lihat Rute Ke Sini</button>`;
 }
 
 function escapeHtml(text) {
@@ -179,6 +219,7 @@ async function searchNearby(text) {
   const timeoutId = setTimeout(() => activeFetchController.abort(), FETCH_TIMEOUT_MS);
 
   setBusy(true);
+  clearRouting();
   setStatus("Mencari tempat terdekat...", { loading: true });
   clearMarkers();
 
@@ -222,12 +263,15 @@ async function searchNearby(text) {
           className: "custom-tooltip",
         })
         .bindPopup(`
-          <div style="min-width: 220px;">
+          <div style="min-width: 240px;">
             <h4 style="margin: 0 0 8px 0; color: ${style.color};">${escapeHtml(el.tags?.name || "Tanpa Nama")}</h4>
             <p style="margin: 4px 0; font-weight: bold;">📍 Kategori: ${escapeHtml(getCategoryLabel(tag.value))}</p>
             <p style="margin: 4px 0;">📏 <strong>Jarak:</strong> ${formatDistanceKm(distanceKm)}</p>
             <p style="margin: 4px 0;">🏠 <strong>Alamat:</strong> ${escapeHtml(address)}</p>
-            <p style="margin: 4px 0;">🧭 <strong>Navigasi:</strong> <a href="${buildDirectionsUrl(el.lat, el.lon)}" target="_blank" rel="noopener noreferrer">Buka Google Maps</a></p>
+            <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              ${buildRouteButton(el.lat, el.lon, el.tags?.name || "Tempat")}
+              <a href="${buildDirectionsUrl(el.lat, el.lon)}" target="_blank" rel="noopener noreferrer" style="padding: 6px 8px; background: #34a853; color: white; border-radius: 6px; text-decoration: none; text-align: center; font-size: 11px; display: flex; align-items: center; justify-content: center;">🗺️ Google Maps</a>
+            </div>
           </div>
         `)
         .on("popupopen", function () {
@@ -259,6 +303,11 @@ async function searchNearby(text) {
 
 function wireUi() {
   setRadiusUi(getRadiusMeters());
+
+  // Global handler for route button clicks
+  window.showRouteHandler = function(lat, lon, name) {
+    showRoute(lat, lon, name);
+  };
 
   let rafId;
   const applyRadiusChange = (shouldToast) => {
@@ -312,6 +361,7 @@ function wireUi() {
 
   btnClear.addEventListener("click", () => {
     abortActiveFetch();
+    clearRouting();
     clearMarkers();
     setStatus("Siap mencari.");
     toast("Hasil dibersihkan");
