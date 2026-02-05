@@ -10,11 +10,13 @@
 
 - 📍 **Auto Location Detection** - Otomatis mendeteksi lokasi pengguna
 - 🔍 **Smart Search** - Pencarian cerdas dengan deteksi keyword
-- 🎯 **Radius Search** - Pencarian dalam radius 3 km dari lokasi pengguna
+- 🎯 **Radius Search** - Radius bisa dipilih (1 km / 3 km / 5 km)
 - 🗺️ **Interactive Map** - Peta interaktif dengan Leaflet.js
 - 🏷️ **Real-time Labels** - Nama tempat langsung terlihat di marker
 - 📋 **Detailed Info** - Informasi lengkap saat marker diklik
-- 📱 **Responsive Design** - Dapat diakses di semua perangkat
+- 📱 **Mobile Friendly UI** - Kontrol rapi + panel hasil model bottom-sheet
+- 📏 **Sorted by Distance** - Hasil diurutkan berdasarkan jarak terdekat
+- 🧭 **Navigation Link** - Tombol navigasi ke Google Maps
 
 ## 🎯 Kategori Tempat
 
@@ -64,8 +66,9 @@ GeoWithin/
 1. **Izinkan Akses Lokasi** - Klik "Allow" saat browser meminta izin akses lokasi
 2. **Tunggu Peta Load** - Peta akan menampilkan lokasi Anda dengan lingkaran radius pencarian
 3. **Ketik Pencarian** - Masukkan kata kunci di search bar (contoh: "hotel", "rumah sakit", "cafe")
-4. **Tekan Enter** - Hasil pencarian akan muncul sebagai marker berwarna di peta
+4. **Tekan Enter / tombol Cari** - Hasil pencarian akan muncul sebagai marker + daftar hasil
 5. **Klik Marker** - Untuk melihat informasi detail tempat tersebut
+6. **Klik item di daftar hasil** - Peta akan fokus ke tempat tersebut
 
 ## 💡 Tips Pencarian
 

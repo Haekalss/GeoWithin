@@ -54,3 +54,18 @@ const categoryStyle = {
   mall: { color: "#ffc107" },          // kuning
   toilets: { color: "#17a2b8" }        // cyan
 };
+
+const categoryLabel = {
+  hotel: "Hotel / Penginapan",
+  hospital: "Rumah Sakit",
+  clinic: "Klinik / Puskesmas",
+  restaurant: "Restoran / Rumah Makan",
+  cafe: "Cafe / Kafe",
+  supermarket: "Supermarket",
+  convenience: "Minimarket",
+  mall: "Mall",
+  fuel: "SPBU",
+  atm: "ATM",
+  toilets: "Toilet",
+  place_of_worship: "Tempat Ibadah",
+};

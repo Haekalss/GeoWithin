@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>GeoWithin - Nearby Place Finder</title>
   
   <!-- Favicon -->
@@ -14,7 +14,36 @@
 </head>
 <body>
 
-<input id="search" placeholder="🔍 Cari tempat terdekat: hotel, rumah sakit, cafe, restoran..." />
+<div id="ui" class="ui" role="region" aria-label="Kontrol pencarian">
+  <div class="search-row">
+    <input id="search" placeholder="🔍 Cari: hotel, rs, cafe, atm..." autocomplete="off" />
+    <button id="btnLocate" class="icon-btn" type="button" title="Perbarui lokasi" aria-label="Perbarui lokasi">📍</button>
+  </div>
+
+  <div class="control-row">
+    <div class="control control--radius" role="group" aria-label="Kontrol radius">
+      <div class="control-top">
+        <span class="control-label">Radius</span>
+        <span id="radiusValue" class="radius-value">3 km</span>
+      </div>
+      <select id="radius" class="control-input control-input--select" aria-label="Pilih radius">
+        <option value="1000">1 km</option>
+        <option value="3000" selected>3 km</option>
+        <option value="5000">5 km</option>
+      </select>
+      <input id="radiusRange" class="radius-range" type="range" min="1000" max="5000" step="2000" value="3000" aria-label="Geser radius" />
+    </div>
+    
+    <div class="button-row">
+      <button id="btnSearch" class="primary-btn" type="button">Cari</button>
+      <button id="btnClear" class="secondary-btn" type="button">Bersihkan</button>
+    </div>
+
+    <div id="status" class="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <div id="map"></div>
 
