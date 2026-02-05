@@ -34,18 +34,44 @@ function setRadiusUi(radiusMeters) {
   if (radiusValueEl) radiusValueEl.textContent = `${Math.round(radiusMeters / 1000)} km`;
 }
 
+function showLoader() {
+  const loader = document.getElementById('mapLoader');
+  if (loader) {
+    loader.classList.remove('hide');
+    loader.style.display = 'flex';
+  }
+}
+
+function hideLoader() {
+  const loader = document.getElementById('mapLoader');
+  if (loader) {
+    loader.classList.add('hide');
+    setTimeout(() => {
+      loader.style.display = 'none';
+      // Show welcome message after loader hides
+      showWelcomeMessage();
+    }, 300);
+  }
+}
+
+function showWelcomeMessage() {
+  setTimeout(() => {
+    toast("🗺️ Selamat datang di GeoWithin! Ketik pencarian untuk menemukan tempat terdekat.");
+  }, 500);
+}
+
 function setStatus(message, { loading = false } = {}) {
   statusEl.textContent = message || "";
   statusEl.classList.toggle("loading", Boolean(loading));
 }
 
 let toastTimer;
-function toast(message) {
+function toast(message, duration = 3500) {
   if (!message) return;
   toastEl.textContent = message;
   toastEl.classList.add("show");
   if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
+  toastTimer = setTimeout(() => toastEl.classList.remove("show"), duration);
 }
 
 function setBusy(isBusy) {
@@ -160,11 +186,19 @@ function updateSearchArea() {
 }
 
 function initMap() {
-  map = L.map("map").setView(userLocation, 14);
+  showLoader();
+  
+  map = L.map("map", { zoomControl: false }).setView(userLocation, 14);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap",
-  }).addTo(map);
+  });
+  
+  tileLayer.on('load', function() {
+    hideLoader();
+  });
+  
+  tileLayer.addTo(map);
 
   userMarker = L.circleMarker(userLocation, {
     radius: 8,
@@ -176,6 +210,9 @@ function initMap() {
     .bindPopup("Posisi Anda");
 
   updateSearchArea();
+  
+  // Fallback hide loader after 3 seconds
+  setTimeout(hideLoader, 3000);
 }
 
 async function getLocationOnce() {
@@ -260,17 +297,17 @@ async function searchNearby(text) {
         .bindTooltip(`${el.tags?.name || "Tanpa Nama"}`, {
           permanent: true,
           direction: "top",
-          className: "custom-tooltip",
+          className: "custom-tooltip clickable-tooltip",
         })
         .bindPopup(`
-          <div style="min-width: 240px;">
-            <h4 style="margin: 0 0 8px 0; color: ${style.color};">${escapeHtml(el.tags?.name || "Tanpa Nama")}</h4>
-            <p style="margin: 4px 0; font-weight: bold;">📍 Kategori: ${escapeHtml(getCategoryLabel(tag.value))}</p>
-            <p style="margin: 4px 0;">📏 <strong>Jarak:</strong> ${formatDistanceKm(distanceKm)}</p>
-            <p style="margin: 4px 0;">🏠 <strong>Alamat:</strong> ${escapeHtml(address)}</p>
-            <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <div style="min-width: 200px; max-width: 280px;">
+            <h4 style="margin: 0 0 6px 0; color: ${style.color}; font-size: 14px; line-height: 1.2;">${escapeHtml(el.tags?.name || "Tanpa Nama")}</h4>
+            <p style="margin: 3px 0; font-weight: bold; font-size: 11px;">📍 Kategori: ${escapeHtml(getCategoryLabel(tag.value))}</p>
+            <p style="margin: 3px 0; font-size: 11px;">📏 <strong>Jarak:</strong> ${formatDistanceKm(distanceKm)}</p>
+            <p style="margin: 3px 0; font-size: 11px;">🏠 <strong>Alamat:</strong> ${escapeHtml(address)}</p>
+            <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
               ${buildRouteButton(el.lat, el.lon, el.tags?.name || "Tempat")}
-              <a href="${buildDirectionsUrl(el.lat, el.lon)}" target="_blank" rel="noopener noreferrer" style="padding: 6px 8px; background: #34a853; color: white; border-radius: 6px; text-decoration: none; text-align: center; font-size: 11px; display: flex; align-items: center; justify-content: center;">🗺️ Google Maps</a>
+              <a href="${buildDirectionsUrl(el.lat, el.lon)}" target="_blank" rel="noopener noreferrer" style="padding: 5px 6px; background: #34a853; color: white; border-radius: 4px; text-decoration: none; text-align: center; font-size: 10px; display: flex; align-items: center; justify-content: center;">🗺️ Maps</a>
             </div>
           </div>
         `)
@@ -280,6 +317,27 @@ async function searchNearby(text) {
         .on("popupclose", function () {
           this.openTooltip();
         });
+
+      // Event listener sederhana untuk tooltip
+      marker.on('tooltipopen', function(e) {
+        const tooltipElement = e.tooltip.getElement();
+        if (tooltipElement) {
+          tooltipElement.style.pointerEvents = 'auto';
+          tooltipElement.style.cursor = 'pointer';
+          
+          tooltipElement.addEventListener('click', function(evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            marker.openPopup();
+          });
+          
+          tooltipElement.addEventListener('touchstart', function(evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            marker.openPopup();
+          });
+        }
+      });
 
       markers.push(marker);
     });
@@ -307,23 +365,37 @@ function wireUi() {
   // Global handler for route button clicks
   window.showRouteHandler = function(lat, lon, name) {
     showRoute(lat, lon, name);
+    // Tutup popup setelah menampilkan rute
+    map.closePopup();
   };
 
   let rafId;
   const applyRadiusChange = (shouldToast) => {
     const radiusMeters = getRadiusMeters();
     setRadiusUi(radiusMeters);
-    updateSearchArea();
+    if (map && userLocation) {
+      updateSearchArea();
+    }
     if (shouldToast) toast(`Radius: ${Math.round(radiusMeters / 1000)} km`);
   };
 
-  radiusSelect.addEventListener("change", () => applyRadiusChange(true));
+  // Sync radius controls
+  if (radiusSelect) {
+    radiusSelect.addEventListener("change", () => {
+      if (radiusRange) radiusRange.value = radiusSelect.value;
+      applyRadiusChange(true);
+    });
+  }
+  
   if (radiusRange) {
     radiusRange.addEventListener("input", () => {
+      if (radiusSelect) radiusSelect.value = radiusRange.value;
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => applyRadiusChange(false));
     });
-    radiusRange.addEventListener("change", () => applyRadiusChange(true));
+    radiusRange.addEventListener("change", () => {
+      applyRadiusChange(true);
+    });
   }
 
   btnLocate.addEventListener("click", async () => {
